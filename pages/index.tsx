@@ -1,5 +1,3 @@
-import { db } from '../firebase';  // Adjust path if needed
-import { doc, setDoc } from "firebase/firestore";
 import { useState } from 'react';
 
 type MeasurementUnit = 'cm' | 'inch';
