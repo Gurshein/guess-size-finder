@@ -197,7 +197,7 @@ export default function AutoSizeFinder() {
   const findSize = () => {
     if (!gender || !category) return;
 
-    const chart = sizeCharts[gender][category];
+    const chart = sizeCharts[gender][category as keyof typeof sizeCharts[Gender]];
     let bestMatch = '';
     let smallestDiff = Infinity;
 
