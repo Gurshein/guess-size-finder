@@ -11,6 +11,36 @@ interface MeasurementGuide {
   video?: string;
 }
 
+interface Step {
+  number: number;
+  isActive: boolean;
+  isCompleted: boolean;
+}
+
+// Step indicator component
+const StepIndicator = ({ steps }: { steps: Step[] }) => {
+  return (
+    <div className="flex justify-between items-center mb-8">
+      {steps.map((step) => (
+        <div key={step.number} className="flex flex-col items-center">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              step.isCompleted
+                ? "bg-black text-white"
+                : step.isActive
+                ? 'border-2 border-current text-gray-600'
+                : 'border border-gray-300 text-gray-400'
+            }`}
+          >
+            {step.number}
+          </div>
+          <div className="text-xs mt-1 text-gray-800">Step {step.number}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const sizeCharts = {
   men: {
     tops: {
@@ -98,6 +128,7 @@ const measurementGuides: Record<string, MeasurementGuide> = {
 };
 
 export default function AutoSizeFinder() {
+  const [currentStep, setCurrentStep] = useState(0); // Start with 0 for intro screen
   const [gender, setGender] = useState<Gender | ''>('');
   const [category, setCategory] = useState<Category | ''>('');
   const [measurements, setMeasurements] = useState<Measurements>({});
@@ -105,6 +136,13 @@ export default function AutoSizeFinder() {
   const [unit, setUnit] = useState<MeasurementUnit>('cm');
   const [activeHelp, setActiveHelp] = useState('');
   const [productUrl, setProductUrl] = useState('');
+
+  // Define steps for the wizard
+  const steps: Step[] = [
+    { number: 1, isActive: currentStep === 1, isCompleted: currentStep > 1 },
+    { number: 2, isActive: currentStep === 2, isCompleted: currentStep > 2 },
+    { number: 3, isActive: currentStep === 3, isCompleted: currentStep > 3 }
+  ];
 
   // Extract gender & category from URL
   const analyzeUrl = () => {
@@ -129,6 +167,9 @@ export default function AutoSizeFinder() {
       alert("Could not detect category. URL should contain '/tops/', '/dresses/', or '/pants/'.");
       return;
     }
+    
+    // Move to next step after analysis
+    setCurrentStep(2);
   };
 
   // Get measurement fields for current category
@@ -182,6 +223,7 @@ export default function AutoSizeFinder() {
     });
 
     setRecommendedSize(bestMatch || 'Size not found');
+    setCurrentStep(3);
   };
 
   // Handle measurement input changes
@@ -189,116 +231,175 @@ export default function AutoSizeFinder() {
     setMeasurements(prev => ({ ...prev, [field]: value }));
   };
 
-  // Initial screen: URL input
-  if (!gender || !category) {
-    return (
-      <div className="size-finder bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Test Size Finder with a Product URL</h2>
+  // Navigation handlers
+  const handleNext = () => {
+    if (currentStep === 0) {
+      setCurrentStep(1);
+    } else if (currentStep === 1) {
+      analyzeUrl();
+    } else if (currentStep === 2) {
+      findSize();
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleStartOver = () => {
+    setCurrentStep(0);
+    setGender('');
+    setCategory('');
+    setProductUrl('');
+    setMeasurements({});
+    setRecommendedSize('');
+  };
+
+  // Render current step content
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0: // Intro screen
+        return (
+          <div className="flex flex-col items-center justify-center space-y-8 py-16">
+            <h1 className="text-4xl font-serif text-center text-black">Find Your Perfect Size</h1>
+            <p className="text-center text-gray-600">Get personalized size recommendations in just 3 steps</p>
+            <button
+              onClick={handleNext}
+              className="px-8 py-3 rounded-md bg-black text-white font-medium text-lg"
+            >
+              Start Now
+            </button>
+          </div>
+        );
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">
+      case 1: // URL Input Step
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-serif text-center text-black">Product Identification</h2>
+            <p className="text-center text-gray-700">
               Enter Product URL (e.g., https://guess.in/women/dresses/red-dress)
-            </label>
+            </p>
             <input
               type="text"
               value={productUrl}
               onChange={(e) => setProductUrl(e.target.value)}
-              placeholder="Paste a Guess product URL here..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+              placeholder="Enter URL here"
+              className="w-full p-3 border rounded-md focus:ring-2 focus:ring-opacity-50 focus:ring-black text-black"
             />
           </div>
-
-          <button
-            onClick={analyzeUrl}
-            disabled={!productUrl}
-            className="w-full py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            Detect Gender & Category
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Main size finder interface
-  return (
-    <div className="size-finder bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">
-          {gender === 'men' ? "Men's" : "Women's"} {category} Size Finder
-        </h2>
-        <div className="unit-toggle flex border border-gray-300 rounded-md">
-          <button
-            onClick={() => setUnit('cm')}
-            className={`px-3 py-1 text-sm ${unit === 'cm' ? 'bg-black text-white' : 'bg-white'}`}
-          >
-            cm
-          </button>
-          <button
-            onClick={() => setUnit('inch')}
-            className={`px-3 py-1 text-sm ${unit === 'inch' ? 'bg-black text-white' : 'bg-white'}`}
-          >
-            in
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {getMeasurementFields().map((field) => (
-          <div key={field} className="measurement-group">
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-900 capitalize">
-                {field.replace('_', ' ')}
-              </label>
+        );
+        
+        case 2: // Measurements Step
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-serif text-center text-black">
+              Enter Your Measurements
+            </h2>
+            <div className="flex justify-end space-x-2 mb-4">
               <button 
-                onClick={() => setActiveHelp(activeHelp === field ? '' : field)}
-                className="text-blue-600 text-xs hover:underline"
+                onClick={() => setUnit('cm')}
+                className={`px-3 py-1 rounded ${unit === 'cm' ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
               >
-                How to measure?
+                cm
+              </button>
+              <button 
+                onClick={() => setUnit('inch')}
+                className={`px-3 py-1 rounded ${unit === 'inch' ? 'bg-black text-white' : 'bg-gray-200 text-gray-800'}`}
+              >
+                in
               </button>
             </div>
-
-            {activeHelp === field && (
-              <div className="mb-2 p-3 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-sm">{measurementGuides[field]?.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{measurementGuides[field]?.description}</p>
-              </div>
-            )}
-
-            <div className="relative">
-              <input
-                type="number"
-                value={measurements[field] || ''}
-                onChange={(e) => handleMeasurementChange(field, e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-                placeholder={`${field} (${unit})`}
-                min="0"
-                step="0.1"
-              />
-              <span className="absolute right-3 top-2.5 text-gray-500 text-sm">{unit}</span>
+            <div className="space-y-4">
+              {getMeasurementFields().map((field) => (
+                <div key={field} className="flex items-center justify-between">
+                  <label className="capitalize text-gray-900">{measurementGuides[field]?.title || field}</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        className="w-32 p-2 border rounded-md text-black" // Added text-black here
+                        placeholder={field}
+                        value={measurements[field] || ''}
+                        min="0"
+                        step="0.1"
+                        onChange={(e) => handleMeasurementChange(field, e.target.value)}
+                      />
+                      <span className="absolute right-3 top-2.5 text-gray-800 text-sm">{unit}</span>
+                    </div>
+                    <button 
+                      onClick={() => setActiveHelp(activeHelp === field ? '' : field)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      How to measure?
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              {activeHelp && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900">{measurementGuides[activeHelp]?.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{measurementGuides[activeHelp]?.description}</p>
+                </div>
+              )}
             </div>
           </div>
-        ))}
-      </div>
+        );
+        
+      case 3: // Results Step
+        return (
+          <div className="space-y-6 text-center">
+            <h2 className="text-2xl font-serif text-black">Your Recommended Size</h2>
+            <div className="text-6xl font-bold my-8 text-black">{recommendedSize}</div>
+            <p className="text-gray-600">
+              For {gender === 'men' ? "Men's" : "Women's"} {category}
+            </p>
+            <button
+              onClick={handleStartOver}
+              className="mt-8 px-6 py-2 rounded-md bg-black text-white"
+            >
+              Start Over
+            </button>
+          </div>
+        );
+        
+      default:
+        return null;
+    }
+  };
 
-      <button
-        onClick={findSize}
-        disabled={Object.keys(measurements).length === 0}
-        className="mt-6 w-full py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        Find My Size
-      </button>
+  return (
+    <div className="min-h-screen bg-gray-50 relative">
+      
+      <div className="w-full h-16 bg-yellow-800" />
+      
+      <div className="max-w-2xl mx-auto p-8">
+        {currentStep > 0 && currentStep <= 3 && (
+          <StepIndicator steps={steps} />
+        )}
 
-      {recommendedSize && (
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="font-medium text-green-800">Recommended Size</h3>
-          <div className="text-3xl font-bold text-green-900 my-2">{recommendedSize}</div>
-          <p className="text-sm text-green-700">
-            For {gender}'s {category} based on your measurements
-          </p>
+        <div className="bg-white p-8 rounded-lg shadow-sm border">
+          {renderStep()}
+          
+          {currentStep > 0 && currentStep < 3 && (
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={handleBack}
+                className="px-6 py-2 rounded-md bg-gray-200 text-gray-800"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleNext}
+                className="px-6 py-2 rounded-md bg-black text-white"
+                disabled={currentStep === 1 ? !productUrl : Object.keys(measurements).length === 0}
+              >
+                {currentStep === 2 ? 'Find My Size' : 'Next'}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
