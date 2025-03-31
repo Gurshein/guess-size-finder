@@ -201,14 +201,14 @@ export default function AutoSizeFinder() {
     let bestMatch = '';
     let smallestDiff = Infinity;
 
-    Object.entries(chart).forEach(([size, sizeData]) => {
+    Object.entries(chart).forEach(([size, sizeData]: [string, Record<string, number>]) => {
       let totalDiff = 0;
       let measuredParams = 0;
 
       Object.entries(sizeData).forEach(([key, idealValue]) => {
         if (measurements[key]) {
           const userValue = convertToCm(measurements[key]);
-          totalDiff += Math.abs(userValue - idealValue);
+          totalDiff += Math.abs(userValue - (idealValue as number));
           measuredParams++;
         }
       });
