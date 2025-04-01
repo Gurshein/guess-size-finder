@@ -52,12 +52,12 @@ const sizeCharts = {
       XXL: { shoulder: 51, chest: 115, waist: 103, neck: 46.5 }
     },
     trousers: {
-      XS: { waist: 72.5, hips: 88.5, thigh: 48, inseam: 79 },
-      S: { waist: 77.5, hips: 93.5, thigh: 52, inseam: 81 },
-      M: { waist: 82.5, hips: 98.5, thigh: 56, inseam: 83 },
-      L: { waist: 87.5, hips: 103.5, thigh: 60, inseam: 85 },
-      XL: { waist: 93.5, hips: 109.5, thigh: 64, inseam: 87 },
-      XXL: { waist: 98.5, hips: 114.5, thigh: 66, inseam: 89 }
+      XS: { waist: 72.5, hips: 88.5, thigh: 48 },
+      S: { waist: 77.5, hips: 93.5, thigh: 52 },
+      M: { waist: 82.5, hips: 98.5, thigh: 56 },
+      L: { waist: 87.5, hips: 103.5, thigh: 60},
+      XL: { waist: 93.5, hips: 109.5, thigh: 64 },
+      XXL: { waist: 98.5, hips: 114.5, thigh: 66 }
     }
   },
   women: {
@@ -78,12 +78,12 @@ const sizeCharts = {
       XL: { bust: 105, waist: 88, hips: 114, length: 117.5 }
     },
     trousers: {
-      XXS: { waist: 61.5, hips: 87.5, thigh: 50.5, inseam: 76 },
-      XS: { waist: 64, hips: 90, thigh: 51.5, inseam: 78 },
-      S: { waist: 66.5, hips: 92.5, thigh: 52.5, inseam: 80 },
-      M: { waist: 69, hips: 95, thigh: 53.5, inseam: 82 },
-      L: { waist: 71.5, hips: 97.5, thigh: 54.5, inseam: 84 },
-      XL: { waist: 74, hips: 100, thigh: 55.5, inseam: 86 }
+      XXS: { waist: 61.5, hips: 87.5, thigh: 50.5 },
+      XS: { waist: 64, hips: 90, thigh: 51.5,},
+      S: { waist: 66.5, hips: 92.5, thigh: 52.5 },
+      M: { waist: 69, hips: 95, thigh: 53.5},
+      L: { waist: 71.5, hips: 97.5, thigh: 54.5 },
+      XL: { waist: 74, hips: 100, thigh: 55.5 }
     }
   }
 };
@@ -116,10 +116,6 @@ const measurementGuides: Record<string, MeasurementGuide> = {
   thigh: {
     title: "Thigh",
     description: "Measure around the fullest part of your thigh"
-  },
-  inseam: {
-    title: "Inseam",
-    description: "Measure from your crotch to the bottom of your ankle"
   },
   length: {
     title: "Length",
@@ -179,12 +175,12 @@ export default function AutoSizeFinder() {
     return gender === 'men' 
       ? category === 'tops'
         ? ['shoulder', 'chest', 'waist', 'neck']
-        : ['waist', 'hips', 'thigh', 'inseam']
+        : ['waist', 'hips', 'thigh']
       : category === 'tops'
         ? ['shoulder', 'bust', 'waist', 'neck']
         : category === 'dresses'
           ? ['bust', 'waist', 'hips', 'length']
-          : ['waist', 'hips', 'thigh', 'inseam'];
+          : ['waist', 'hips', 'thigh'];
   };
 
   // Convert units (inch → cm)
